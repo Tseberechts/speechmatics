@@ -3,7 +3,6 @@
 const request = require('request');
 const fs = require('fs');
 
-
 function SpeechmaticsError(obj) {
   Error.captureStackTrace(this, this.constructor);
   Object.assign(this, obj);
@@ -11,8 +10,8 @@ function SpeechmaticsError(obj) {
   this.statusCode = obj.code;
   this.message = obj.error;
 }
-require('util').inherits(SpeechmaticsError, Error);
 
+require('util').inherits(SpeechmaticsError, Error);
 
 class Client {
   constructor(userId, apiToken, opts) {
@@ -46,7 +45,7 @@ class Client {
       json: true,
       headers: this.headers,
       baseUrl: this.baseUrl,
-      url: `/v${this.apiVersion}/${path}`,
+      url: `/v${this.apiVersion}/${path}`
     });
     options.qs = options.qs || {};
     options.qs.auth_token = this.apiToken;
@@ -71,21 +70,22 @@ class Client {
     opts = opts || {};
     //default for language model is english global
     var model = 'en';
-     if(opts.model){
+    if (opts.model) {
       model = opts.model;
-     }
+    }
     //default for speaker diarization is off
     var diarisation = 'false';
-    if(opts.diarisation){
-        if(opts.diarisation === true){
-          diarisation = 'true';
+    if (opts.diarisation) {
+      if (opts.diarisation === true) {
+        diarisation = 'true';
       }
     }
+
     const fd = Object.assign({
       model: model, //eg: 'en-US',
-      diarisation: diarisation,
+      diarisation: diarisation
     }, opts.formData);
-    //clean up model and diarization 
+    //clean up model and diarization
     delete opts.model;
     delete opts.diarisation;
 
@@ -113,8 +113,7 @@ class Client {
     this.makeRequest('POST', path, opts, done);
   }
 
-
-    /* User */
+  /* User */
   getUser(opts, done) {
     this.get('user/:userId/', opts, done);
   }
@@ -128,29 +127,39 @@ class Client {
   }
 
   createJob(opts, done) {
-    this.post('user/:userId/jobs/', opts, done);
+    if (this.apiVersion === '2') {
+      this.post('jobs/', opts, done);
+    } else {
+      this.post('user/:userId/jobs/', opts, done);
+    }
   }
 
   getJob(jobId, opts, done) {
-    this.get(`user/:userId/jobs/${jobId}/`, opts, done);
+    if (this.apiVersion === '2') {
+      this.post(`jobs/${jobId}`, opts, done);
+    } else {
+      this.get(`user/:userId/jobs/${jobId}/`, opts, done);
+    }
   }
 
   getTranscript(jobId, opts, done) {
-    this.get(`user/:userId/jobs/${jobId}/transcript`, opts, done);
+    if (this.apiVersion === '2') {
+      this.get(`jobs/${jobId}/transcript`, opts, done);
+    } else {
+      this.get(`user/:userId/jobs/${jobId}/transcript`, opts, done);
+    }
   }
 
   getAlignment(jobId, opts, done) {
     this.get(`user/:userId/jobs/${jobId}/alignment`, opts, done);
   }
 
-
-    /* Status */
+  /* Status */
   getStatus(opts, done) {
     this.get('status', opts, done);
   }
 
-
-    /* Statics */
+  /* Statics */
   static parseAlignment(text) {
     return text.toString().split('\n').reduce((arr, line) => {
       const re = /<time=(\d+\.\d+)>(\S*)<time=(\d+\.\d+)>/g;
@@ -162,18 +171,19 @@ class Client {
           words.push({
             term: match[2],
             start: parseFloat(match[1], 10),
-            end: parseFloat(match[3], 10),
+            end: parseFloat(match[3], 10)
           });
           recurse(str);
         }
       }
+
       recurse(line);
 
       if (words.length) {
         arr.push({
           start: words[0].start,
           end: words[words.length - 1].end,
-          words,
+          words
         });
       }
       return arr;
