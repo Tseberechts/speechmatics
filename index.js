@@ -136,7 +136,7 @@ class Client {
 
   getJob(jobId, opts, done) {
     if (this.apiVersion === '2') {
-      this.post(`jobs/${jobId}`, opts, done);
+      this.get(`jobs/${jobId}`, opts, done);
     } else {
       this.get(`user/:userId/jobs/${jobId}/`, opts, done);
     }
